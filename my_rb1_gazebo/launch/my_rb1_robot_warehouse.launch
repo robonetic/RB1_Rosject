@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <param name="robot_description"
-        command="$(find xacro)/xacro --inorder '$(find my_rb1_description)/urdf/my_rb1_description.urdf'"/>
+        command="$(find xacro)/xacro --inorder '$(find my_rb1_description)/urdf/my_rb1_description.xacro'"/>
 
 	<!-- roslaunch arguments --> 
 	<arg name="debug" default="false"/>
