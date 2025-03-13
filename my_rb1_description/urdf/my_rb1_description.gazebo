@@ -1,4 +1,5 @@
-<robot>
+<?xml version="1.0" ?>
+<robot name="rb1">
     <gazebo reference="base_link">
         <material>Gazebo/Black</material>
     </gazebo>
