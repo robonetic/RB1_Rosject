@@ -17,17 +17,8 @@ class RotateService(object):
         self.yaw = None
         rospy.loginfo("Service Ready.")
 
-    def normalize_angle(self, angle):
-        while angle > math.pi:
-            angle -= 2 * math.pi
-        
-        while angle < -math.pi:
-            angle += 2 * math.pi
-        
-        return angle
-
     def callback(self, request):
-        rospy.loginfo("Service Requested.")
+        rospy.loginfo(f"Service Requested - Rotating {request.degrees}°")
         rotate_response = RotateResponse()
         initial_yaw = self.yaw
         target_angle = math.radians(request.degrees)
@@ -37,27 +28,37 @@ class RotateService(object):
             rotate_response.result = "Failed - No yaw data..."
             return rotate_response
         try:
-            current_angle = 0.0 
+            accumulated_angle = 0.0 
             tolerance = math.radians(1)
             cmd = Twist()
-            angular_speed = 0.3 if target_angle >= 0 else -0.3
+            angular_speed = -1 if target_angle >= 0 else 1
+            previous_yaw = initial_yaw
 
-            while abs(current_angle) < abs(target_angle) - tolerance and not rospy.is_shutdown():
+            while abs(accumulated_angle) < abs(target_angle) - tolerance and not rospy.is_shutdown():
                 cmd.angular.z = angular_speed
                 self.pub.publish(cmd)
                 self.r.sleep()
-                delta_yaw = self.normalize_angle(self.yaw - initial_yaw)
-                current_angle = delta_yaw
+
+                current_yaw = self.yaw
+                delta_yaw = current_yaw - previous_yaw
+
+                if delta_yaw > math.pi:
+                    delta_yaw -= 2 * math.pi
+                elif delta_yaw < -math.pi:
+                    delta_yaw += 2 * math.pi
+
+                accumulated_angle += delta_yaw
+                previous_yaw = current_yaw
 
             cmd.angular.z = 0
             self.pub.publish(cmd)     
         
-            rospy.loginfo("Service Completed.")
-            rotate_response.result = "success"
+            rospy.loginfo(f"Service Completed - Rotated {request.degrees}°")
+            rotate_response.result = "RB1 Completed Rotation Successfully"
             return rotate_response
         except:
             rospy.logerr("Unexpected error has occurred...")
-            rotate_response.result = "Failed..."
+            rotate_response.result = "RB Failed to Complete Rotation"
             return rotate_response
 
 
